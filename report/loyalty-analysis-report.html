@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home repair loyalty analysis</title>
+  <style>
+    :root {
+      --fg: rgba(228, 228, 228, 0.92);
+      --fg-secondary: rgba(228, 228, 228, 0.55);
+      --fg-tertiary: rgba(228, 228, 228, 0.37);
+      --bg: #181818;
+      --chrome: #141414;
+      --elevated: #1e1e1e;
+      --fill: rgba(228, 228, 228, 0.07);
+      --fill-strong: rgba(228, 228, 228, 0.12);
+      --stroke: rgba(228, 228, 228, 0.12);
+      --stroke-strong: rgba(228, 228, 228, 0.2);
+      --accent: #599CE7;
+      --success: #3FA266;
+      --warning: #C2923A;
+      --info: #599CE7;
+      --danger: #FC6B83;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    @page {
+      margin: 0;
+      size: A4;
+      background: #181818;
+    }
+
+    html {
+      background: #181818;
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: #181818;
+      color: var(--fg);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 20px;
+      -webkit-font-smoothing: antialiased;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Full-bleed dark fill so PDF pages never show white margins */
+    .page-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background: #181818;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      gap: 8px;
+      padding: 10px 20px;
+      background: rgba(20, 20, 20, 0.92);
+      border-bottom: 1px solid var(--stroke);
+      backdrop-filter: blur(8px);
+    }
+    .toolbar button {
+      font: inherit;
+      font-weight: 590;
+      font-size: 13px;
+      border: 1px solid var(--stroke-strong);
+      background: var(--fill-strong);
+      color: var(--fg);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .toolbar button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #191c22;
+    }
+
+    .page {
+      max-width: none;
+      width: 100%;
+      margin: 0;
+      padding: 28px 32px 64px;
+      background: #181818;
+      min-height: 100vh;
+    }
+
+    .stack { display: flex; flex-direction: column; }
+    .stack-24 { gap: 24px; }
+    .stack-12 { gap: 12px; }
+    .stack-8 { gap: 8px; }
+    .stack-6 { gap: 6px; }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 30px;
+      font-weight: 590;
+      letter-spacing: -0.01em;
+    }
+    h2 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 24px;
+      font-weight: 590;
+    }
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 22px;
+      font-weight: 590;
+    }
+    .muted { color: var(--fg-secondary); }
+    .small { font-size: 12px; line-height: 16px; color: var(--fg-secondary); }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      line-height: 16px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke-strong);
+      background: transparent;
+      color: var(--fg-secondary);
+    }
+    .pill.sm {
+      padding: 2px 8px;
+      border: none;
+      background: var(--fill-strong);
+      font-size: 11px;
+    }
+
+    .callout {
+      display: flex;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--stroke);
+      background: var(--fill);
+    }
+    .callout.info { border-color: rgba(89, 156, 231, 0.35); background: rgba(89, 156, 231, 0.1); }
+    .callout.warning { border-color: rgba(194, 146, 58, 0.4); background: rgba(194, 146, 58, 0.1); }
+    .callout .icon {
+      width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: 11px; font-weight: 700;
+    }
+    .callout.info .icon { background: var(--info); color: #111; }
+    .callout.warning .icon { background: var(--warning); color: #111; }
+    .callout strong { display: block; margin-bottom: 2px; font-weight: 590; }
+    .callout p { margin: 0; color: var(--fg-secondary); }
+
+    .grid { display: grid; gap: 12px; }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+
+    .stat {
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--stroke);
+      background: var(--fill);
+    }
+    .stat .value {
+      font-size: 22px;
+      line-height: 28px;
+      font-weight: 590;
+      letter-spacing: -0.02em;
+    }
+    .stat .label {
+      margin-top: 2px;
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--fg-secondary);
+    }
+    .stat.success .value { color: var(--success); }
+    .stat.warning .value { color: var(--warning); }
+    .stat.info .value { color: var(--info); }
+
+    .divider {
+      height: 1px;
+      background: var(--stroke);
+      border: 0;
+      margin: 0;
+    }
+
+    .card {
+      border: 1px solid var(--stroke);
+      border-radius: 8px;
+      background: var(--elevated);
+      overflow: hidden;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--stroke);
+      font-weight: 590;
+      font-size: 14px;
+    }
+    .card-body { padding: 14px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      border: 1px solid var(--stroke);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      text-align: left;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--stroke);
+      vertical-align: top;
+    }
+    th {
+      color: var(--fg-secondary);
+      font-weight: 590;
+      font-size: 12px;
+      background: var(--fill);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr.tone-success td:first-child { box-shadow: inset 3px 0 0 var(--success); }
+    tr.tone-warning td:first-child { box-shadow: inset 3px 0 0 var(--warning); }
+    tr.tone-info td:first-child { box-shadow: inset 3px 0 0 var(--info); }
+
+    .chart-wrap { width: 100%; }
+    .chart-caption { margin-top: 8px; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 16px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: var(--fg-secondary);
+    }
+    .legend span::before {
+      content: "";
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 2px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .legend .l-success::before { background: var(--success); }
+    .legend .l-info::before { background: var(--info); }
+    .legend .l-a::before { background: #7aa2f7; }
+    .legend .l-b::before { background: #9ece6a; }
+    .legend .l-c::before { background: #e0af68; }
+
+    .pie-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .pie-center-label {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      pointer-events: none;
+    }
+    .pie-center-label strong {
+      display: block;
+      font-size: 18px;
+      font-weight: 590;
+    }
+    .pie-shell { position: relative; width: 220px; height: 220px; }
+
+    @media (max-width: 760px) {
+      .grid-4, .grid-2 { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 520px) {
+      .grid-4, .grid-2 { grid-template-columns: 1fr; }
+      .page { padding: 20px 14px 48px; }
+    }
+    @media print {
+      .toolbar { display: none !important; }
+      html, body {
+        background: #181818 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        min-height: 100% !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .page {
+        background: #181818 !important;
+        max-width: none !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 24px 28px 40px !important;
+        min-height: 100vh !important;
+      }
+      .card, table, .callout, .stat, .stack-12, .grid, svg {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .card, table, .callout, .stat { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-bg" aria-hidden="true"></div>
+  <div class="toolbar">
+    <button class="primary" type="button" onclick="window.print()">Print / Save PDF</button>
+  </div>
+
+  <div class="page stack stack-24">
+    <!-- Header -->
+    <div class="stack stack-8">
+      <h1>Home repair loyalty analysis</h1>
+      <div class="muted">Source: Data.xlsx · 2,000 service records · Jan 1 – Apr 30, 2024</div>
+      <div style="font-weight:590">Eng:Abd Alrahman Ahmed</div>
+      <div class="row">
+        <span class="pill">Surveys</span>
+        <span class="pill">Service bundles</span>
+        <span class="pill">Customer loyalty</span>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <div class="icon">i</div>
+      <div>
+        <strong>Business focus</strong>
+        <p>Grow repeat business with post-job surveys and tiered service bundles (Standard / Seasonal / Premium), using channel and region patterns in the marketing database.</p>
+      </div>
+    </div>
+
+    <div class="grid grid-4">
+      <div class="stat"><div class="value">$1.56M</div><div class="label">Total revenue</div></div>
+      <div class="stat"><div class="value">$515K</div><div class="label">Ad spend</div></div>
+      <div class="stat success"><div class="value">3.02x</div><div class="label">Overall ROAS</div></div>
+      <div class="stat"><div class="value">49.4%</div><div class="label">Returning customers</div></div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Database snapshot -->
+    <div class="stack stack-12">
+      <h2>Database snapshot</h2>
+      <div class="muted">Flat marketing table — one row per campaign/service observation. No customer IDs, NPS, or bundle flags yet; loyalty is inferred from Customer Type.</div>
+      <table>
+        <thead>
+          <tr><th>Column</th><th>Role</th><th>Values / notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Date</td><td>Time</td><td>2024-01-01 → 2024-04-30</td></tr>
+          <tr><td>Revenue</td><td>Outcome ($)</td><td>Avg ~$779 per record</td></tr>
+          <tr><td>Ad Spend</td><td>Cost ($)</td><td>Total $514,908</td></tr>
+          <tr><td>Conversions</td><td>Volume</td><td>10,069 total</td></tr>
+          <tr><td>Service Type</td><td>Offer tier</td><td>Standard 668 · Seasonal 651 · Premium 681</td></tr>
+          <tr><td>Customer Type</td><td>Loyalty proxy</td><td>New 1,012 · Returning 988</td></tr>
+          <tr><td>Channel</td><td>Acquisition</td><td>Google · Instagram · Referral · Email</td></tr>
+          <tr><td>Region</td><td>Geo</td><td>North · South · East · West</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pie charts -->
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-header">Customer mix</div>
+        <div class="card-body">
+          <div class="pie-block">
+            <div class="pie-shell">
+              <svg viewBox="0 0 220 220" width="220" height="220">
+                <!-- New 1012/2000 = 50.6% → 182.16deg ; Returning 49.4% -->
+                <circle cx="110" cy="110" r="78" fill="none" stroke="rgba(228,228,228,0.08)" stroke-width="28"/>
+                <circle cx="110" cy="110" r="78" fill="none" stroke="#599CE7" stroke-width="28"
+                  stroke-dasharray="247.3 241.4" stroke-dashoffset="61.8" transform="rotate(-90 110 110)"/>
+                <circle cx="110" cy="110" r="78" fill="none" stroke="#3FA266" stroke-width="28"
+                  stroke-dasharray="241.4 247.3" stroke-dashoffset="-185.5" transform="rotate(-90 110 110)"/>
+              </svg>
+              <div class="pie-center-label"><div><strong>2,000</strong><span class="small">records</span></div></div>
+            </div>
+            <div class="legend">
+              <span class="l-info">New 1,012</span>
+              <span class="l-success">Returning 988</span>
+            </div>
+            <div class="small">Nearly even split — loyalty programs can tip the balance.</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">Service mix</div>
+        <div class="card-body">
+          <div class="pie-block">
+            <div class="pie-shell">
+              <svg viewBox="0 0 220 220" width="220" height="220">
+                <!-- Standard 668, Seasonal 651, Premium 681 out of 2000 -->
+                <circle cx="110" cy="110" r="78" fill="none" stroke="rgba(228,228,228,0.08)" stroke-width="28"/>
+                <circle cx="110" cy="110" r="78" fill="none" stroke="#7aa2f7" stroke-width="28"
+                  stroke-dasharray="163.3 325.4" stroke-dashoffset="61.8" transform="rotate(-90 110 110)"/>
+                <circle cx="110" cy="110" r="78" fill="none" stroke="#9ece6a" stroke-width="28"
+                  stroke-dasharray="159.1 329.6" stroke-dashoffset="-101.5" transform="rotate(-90 110 110)"/>
+                <circle cx="110" cy="110" r="78" fill="none" stroke="#e0af68" stroke-width="28"
+                  stroke-dasharray="166.4 322.3" stroke-dashoffset="-260.6" transform="rotate(-90 110 110)"/>
+              </svg>
+              <div class="pie-center-label"><div><strong>3</strong><span class="small">tiers</span></div></div>
+            </div>
+            <div class="legend">
+              <span class="l-a">Standard 668</span>
+              <span class="l-b">Seasonal 651</span>
+              <span class="l-c">Premium 681</span>
+            </div>
+            <div class="small">Balanced tiers — good base for bundle packaging.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loyalty line chart -->
+    <div class="stack stack-12">
+      <h2>Loyalty signal over time</h2>
+      <div class="muted">Returning share rose from 48.4% in January to 51.8% in April while ROAS stayed near 3x.</div>
+      <div class="legend">
+        <span class="l-success">Returning customers (%)</span>
+        <span class="l-info">ROAS (x)</span>
+      </div>
+      <div class="chart-wrap">
+        <svg viewBox="0 0 800 240" width="100%" height="240" role="img" aria-label="Loyalty signal over time">
+          <line x1="56" y1="20" x2="56" y2="200" stroke="rgba(228,228,228,0.12)"/>
+          <line x1="56" y1="200" x2="780" y2="200" stroke="rgba(228,228,228,0.12)"/>
+          <!-- y grid for ~2.5–55 scale; dual series compressed into readable band -->
+          <!-- Returning %: 48.4, 47.1, 50.3, 51.8 mapped 40–55 → y -->
+          <!-- ROAS: 3.01, 3.12, 2.94, 3.02 mapped onto same visual band for comparison -->
+          <g stroke="rgba(228,228,228,0.08)" stroke-dasharray="4 4">
+            <line x1="56" y1="56" x2="780" y2="56"/>
+            <line x1="56" y1="104" x2="780" y2="104"/>
+            <line x1="56" y1="152" x2="780" y2="152"/>
+          </g>
+          <!-- Returning line (green): map 47–52 → y 170–40 -->
+          <polyline fill="none" stroke="#3FA266" stroke-width="2.5"
+            points="140,92 340,120 540,52 740,24"/>
+          <g fill="#3FA266">
+            <circle cx="140" cy="92" r="4"/><circle cx="340" cy="120" r="4"/>
+            <circle cx="540" cy="52" r="4"/><circle cx="740" cy="24" r="4"/>
+          </g>
+          <!-- ROAS line (blue): map 2.9–3.15 → y 170–40 roughly mid-lower -->
+          <polyline fill="none" stroke="#599CE7" stroke-width="2.5"
+            points="140,112 340,72 540,148 740,108"/>
+          <g fill="#599CE7">
+            <circle cx="140" cy="112" r="4"/><circle cx="340" cy="72" r="4"/>
+            <circle cx="540" cy="148" r="4"/><circle cx="740" cy="108" r="4"/>
+          </g>
+          <g fill="rgba(228,228,228,0.55)" font-size="12" font-family="var(--font)">
+            <text x="140" y="222" text-anchor="middle">Jan 2024</text>
+            <text x="340" y="222" text-anchor="middle">Feb 2024</text>
+            <text x="540" y="222" text-anchor="middle">Mar 2024</text>
+            <text x="740" y="222" text-anchor="middle">Apr 2024</text>
+            <text x="48" y="96" text-anchor="end">50</text>
+            <text x="48" y="28" text-anchor="end">52</text>
+            <text x="48" y="204" text-anchor="end">47</text>
+          </g>
+        </svg>
+      </div>
+      <div class="small chart-caption">Source: Data.xlsx monthly aggregates · Jan–Apr 2024</div>
+    </div>
+
+    <!-- Revenue bars -->
+    <div class="stack stack-12">
+      <h2>Revenue by month</h2>
+      <div class="legend"><span class="l-info">Revenue ($)</span></div>
+      <div class="chart-wrap">
+        <svg viewBox="0 0 800 220" width="100%" height="220" role="img" aria-label="Revenue by month">
+          <line x1="56" y1="16" x2="56" y2="180" stroke="rgba(228,228,228,0.12)"/>
+          <line x1="56" y1="180" x2="780" y2="180" stroke="rgba(228,228,228,0.12)"/>
+          <!-- max ~400483 → bar height scale to 150 -->
+          <rect x="120" y="35" width="72" height="145" fill="#599CE7" rx="3"/>
+          <rect x="300" y="30" width="72" height="150" fill="#599CE7" rx="3"/>
+          <rect x="480" y="37" width="72" height="143" fill="#599CE7" rx="3"/>
+          <rect x="660" y="34" width="72" height="146" fill="#599CE7" rx="3"/>
+          <g fill="rgba(228,228,228,0.55)" font-size="12" font-family="var(--font)">
+            <text x="156" y="202" text-anchor="middle">Jan 2024</text>
+            <text x="336" y="202" text-anchor="middle">Feb 2024</text>
+            <text x="516" y="202" text-anchor="middle">Mar 2024</text>
+            <text x="696" y="202" text-anchor="middle">Apr 2024</text>
+            <text x="156" y="28" text-anchor="middle" fill="rgba(228,228,228,0.75)">$386K</text>
+            <text x="336" y="23" text-anchor="middle" fill="rgba(228,228,228,0.75)">$400K</text>
+            <text x="516" y="30" text-anchor="middle" fill="rgba(228,228,228,0.75)">$382K</text>
+            <text x="696" y="27" text-anchor="middle" fill="rgba(228,228,228,0.75)">$389K</text>
+          </g>
+        </svg>
+      </div>
+      <div class="small">Source: Data.xlsx · monthly sum of Revenue</div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Service tiers -->
+    <div class="stack stack-12">
+      <h2>Service tiers vs loyalty</h2>
+      <div class="muted">Premium returning jobs earn the highest average among Premium customers; Standard leads on ticket size overall but trails on return rate.</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Service</th><th>Records</th><th>Revenue</th><th>Avg revenue</th><th>Returning %</th><th>ROAS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="tone-success"><td>Premium</td><td>681</td><td>$523,610</td><td>$769</td><td>50.1%</td><td>3.01x</td></tr>
+          <tr><td>Seasonal</td><td>651</td><td>$500,642</td><td>$769</td><td>49.6%</td><td>3.05x</td></tr>
+          <tr class="tone-warning"><td>Standard</td><td>668</td><td>$533,271</td><td>$798</td><td>48.5%</td><td>3.01x</td></tr>
+        </tbody>
+      </table>
+      <div class="grid grid-2" style="gap:12px">
+        <div class="card">
+          <div class="card-header">
+            <span>Premium × Returning</span>
+            <span class="pill sm">Upsell</span>
+          </div>
+          <div class="card-body stack stack-6">
+            <div class="stat" style="border:none;padding:0;background:transparent">
+              <div class="value">$796</div>
+              <div class="label">Avg revenue (returning)</div>
+            </div>
+            <div class="small">vs $742 for Premium × New — strongest loyalty lift inside a tier. Bundle maintenance visits onto Premium jobs.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span>Standard retention gap</span>
+            <span class="pill sm">Risk</span>
+          </div>
+          <div class="card-body stack stack-6">
+            <div class="stat warning" style="border:none;padding:0;background:transparent">
+              <div class="value">48.5%</div>
+              <div class="label">Returning share</div>
+            </div>
+            <div class="small">Highest average ticket ($798) but lowest return rate. Survey after Standard jobs to find friction before churn.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Channels -->
+    <div class="stack stack-12">
+      <h2>Channels that feed loyalty</h2>
+      <div class="legend">
+        <span class="l-info">Revenue ($K)</span>
+        <span class="l-success">Returning %</span>
+      </div>
+      <div class="chart-wrap">
+        <svg viewBox="0 0 800 240" width="100%" height="240" role="img" aria-label="Channels that feed loyalty">
+          <line x1="56" y1="20" x2="56" y2="190" stroke="rgba(228,228,228,0.12)"/>
+          <line x1="56" y1="190" x2="780" y2="190" stroke="rgba(228,228,228,0.12)"/>
+          <!-- Google / Referral / Email / Instagram — grouped bars: revenue + returning -->
+          <!-- Revenue max 449.3 → height scale 160 -->
+          <g>
+            <!-- Google -->
+            <rect x="100" y="30" width="36" height="160" fill="#599CE7" rx="2"/>
+            <rect x="140" y="118" width="36" height="72" fill="#3FA266" rx="2"/>
+            <!-- Referral -->
+            <rect x="280" y="54" width="36" height="136" fill="#599CE7" rx="2"/>
+            <rect x="320" y="115" width="36" height="75" fill="#3FA266" rx="2"/>
+            <!-- Email -->
+            <rect x="460" y="64" width="36" height="126" fill="#599CE7" rx="2"/>
+            <rect x="500" y="112" width="36" height="78" fill="#3FA266" rx="2"/>
+            <!-- Instagram -->
+            <rect x="640" y="58" width="36" height="132" fill="#599CE7" rx="2"/>
+            <rect x="680" y="116" width="36" height="74" fill="#3FA266" rx="2"/>
+          </g>
+          <g fill="rgba(228,228,228,0.55)" font-size="12" font-family="var(--font)">
+            <text x="138" y="214" text-anchor="middle">Google</text>
+            <text x="318" y="214" text-anchor="middle">Referral</text>
+            <text x="498" y="214" text-anchor="middle">Email</text>
+            <text x="678" y="214" text-anchor="middle">Instagram</text>
+          </g>
+        </svg>
+      </div>
+      <div class="small">Source: Data.xlsx · channel totals · Returning % plotted on same scale for comparison (not dollars)</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Channel</th><th>Revenue</th><th>CPA</th><th>ROAS</th><th>Returning %</th><th>Loyalty note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Email</td><td>$355K</td><td>$52.79</td><td>3.00x</td><td>51.0%</td><td>Best return rate — survey &amp; rebook here</td></tr>
+          <tr><td>Referral</td><td>$383K</td><td>$49.26</td><td>3.02x</td><td>49.9%</td><td>Lowest CPA — reward referrers with bundles</td></tr>
+          <tr><td>Google</td><td>$449K</td><td>$51.56</td><td>3.14x</td><td>48.2%</td><td>Top revenue &amp; ROAS — convert new → return</td></tr>
+          <tr><td>Instagram</td><td>$370K</td><td>$51.12</td><td>2.92x</td><td>48.8%</td><td>Weaker ROAS — use for seasonal promos</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- High-loyalty pairs -->
+    <div class="stack stack-12">
+      <h2>High-loyalty channel × service pairs</h2>
+      <div class="muted">Best places to pilot bundles and follow-up surveys.</div>
+      <table>
+        <thead>
+          <tr><th>Pair</th><th>Records</th><th>Returning %</th><th>Avg revenue</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+          <tr class="tone-success"><td>Referral × Premium</td><td>180</td><td>55.6%</td><td>$738</td><td>Annual Premium care bundle + referral credit</td></tr>
+          <tr class="tone-success"><td>Email × Seasonal</td><td>152</td><td>54.6%</td><td>$772</td><td>Seasonal reminder survey + pre-book discount</td></tr>
+          <tr><td>Instagram × Seasonal</td><td>155</td><td>51.0%</td><td>$710</td><td>Post-job CSAT → offer Standard upgrade</td></tr>
+          <tr class="tone-info"><td>Google × Seasonal</td><td>185</td><td>48.1%</td><td>$832</td><td>Highest avg ticket — attach multi-visit plan</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Regions -->
+    <div class="stack stack-12">
+      <h2>Regions</h2>
+      <div class="grid grid-4">
+        <div class="stat success"><div class="value">51.9%</div><div class="label">West returning</div></div>
+        <div class="stat"><div class="value">50.5%</div><div class="label">North returning</div></div>
+        <div class="stat"><div class="value">48.4%</div><div class="label">South returning</div></div>
+        <div class="stat warning"><div class="value">46.7%</div><div class="label">East returning</div></div>
+      </div>
+      <div class="muted">West leads on loyalty; East has the lowest returning share but solid ROAS (3.05x) — prioritize East surveys and win-back offers. South posts the highest average revenue ($808).</div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Recommended program -->
+    <div class="stack stack-12">
+      <h2>Recommended program</h2>
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-header">Post-service surveys</div>
+          <div class="card-body stack stack-8">
+            <h3>When</h3>
+            <div>Within 24 hours of job completion, especially Standard and East-region jobs.</div>
+            <h3>What to ask</h3>
+            <div>Satisfaction (1–5), likelihood to rebook, interest in a maintenance bundle, and preferred channel (email already retains best).</div>
+            <h3>Close the loop</h3>
+            <div>Scores ≤3 trigger a callback; scores ≥4 get a one-click Seasonal or Premium bundle offer.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">Service bundles</div>
+          <div class="card-body stack stack-8">
+            <h3>Care Plus (Standard → Seasonal)</h3>
+            <div>Two seasonal checkups after a Standard repair — targets the retention gap on the highest-ticket tier.</div>
+            <h3>Premium Shield</h3>
+            <div>Annual Premium plan sold to Referral and returning Premium customers (already 55.6% return on Referral × Premium).</div>
+            <h3>Seasonal Autopilot</h3>
+            <div>Email reminder + pre-booked Seasonal visit — leans on Email’s 51% returning rate.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

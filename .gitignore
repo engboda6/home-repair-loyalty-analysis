@@ -1,0 +1,18 @@
+# OS / editor
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Local temp / root duplicates (tracked copies live under report/)
+/pdf-preview-page1.png
+/Home-Repair-Loyalty-Analysis.pdf
+/Home-Repair-Loyalty-Analysis-v2.pdf
+/*.html
