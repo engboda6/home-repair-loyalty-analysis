@@ -1,6 +1,5 @@
 import {
   BarChart,
-  Callout,
   Card,
   CardBody,
   CardHeader,
@@ -41,12 +40,6 @@ export default function HomeRepairLoyalty() {
           <Pill>Customer loyalty</Pill>
         </Row>
       </Stack>
-
-      <Callout tone="info" title="Business focus">
-        Grow repeat business with post-job surveys and tiered service bundles
-        (Standard / Seasonal / Premium), using channel and region patterns in
-        the marketing database.
-      </Callout>
 
       <Grid columns={4} gap={12}>
         <Stat value="$1.56M" label="Total revenue" />
