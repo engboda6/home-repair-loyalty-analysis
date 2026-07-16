@@ -13,7 +13,7 @@ Goal: help a home-repair business grow **returning customers** through:
 1. Surveys after every completed job  
 2. Tiered service bundles (Standard / Seasonal / Premium)
 
-Final deliverable: a dark visual report matching the Cursor Canvas look, exported as a fully black PDF with no white margins.
+Final deliverable: a dark visual report matching the Cursor Canvas look, exported as a fully black **5-page** PDF with no white margins.
 
 ---
 
@@ -25,7 +25,7 @@ Final deliverable: a dark visual report matching the Cursor Canvas look, exporte
 | `src/home-repair-loyalty.canvas.tsx` | Interactive Cursor Canvas analysis board |
 | `report/loyalty-analysis-report.html` | Client HTML report matching the Canvas layout |
 | `report/Home-Repair-Loyalty-Analysis.pdf` | Client-ready PDF |
-| `assets/pdf-pages/page-01.png` … `page-04.png` | PNG exports of every PDF page |
+| `assets/pdf-pages/page-01.png` … `page-05.png` | PNG exports of all 5 PDF pages |
 
 ### PDF page previews
 
@@ -36,6 +36,8 @@ Final deliverable: a dark visual report matching the Cursor Canvas look, exporte
 ![Page 3](assets/pdf-pages/page-03.png)
 
 ![Page 4](assets/pdf-pages/page-04.png)
+
+![Page 5](assets/pdf-pages/page-05.png)
 
 ---
 
